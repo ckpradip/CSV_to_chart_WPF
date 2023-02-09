@@ -10,7 +10,7 @@ using System.Windows;
 [assembly: AssemblyTitle("CSV_to_chart_WPF")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("PCK")]
 [assembly: AssemblyProduct("CSV_to_chart_WPF")]
 [assembly: AssemblyCopyright("Copyright ©  2023")]
 [assembly: AssemblyTrademark("")]

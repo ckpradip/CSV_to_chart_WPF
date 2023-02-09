@@ -4,7 +4,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -58,7 +58,7 @@ namespace CSV_to_chart_WPF
         }
 
 
-        private void get_file_contents()
+        private async Task get_file_contents()
         {
             using (TextFieldParser csv_parser = new TextFieldParser(textbox_filename.Text))
             {
@@ -102,65 +102,76 @@ namespace CSV_to_chart_WPF
                     arr[field] = new double[al.Count];
                 }
                 
-                load_values();
+                await load_values();
 
-                load_chart();
+                await load_chart();
+                scottplot_chart.Refresh();
             }
         }
 
 
-        private void load_values()
+        private async Task load_values()
         {
-            /* add entries into chart array */
-            for (int count = 0; count < al.Count; count++)
+            await Task.Run(() =>
             {
-                string[] fields = (string[])al[count];
-                counter[count] = count;
+                /* add entries into chart array */
+                for (int count = 0; count < al.Count; count++)
+                {
+                    string[] fields = (string[])al[count];
+                    counter[count] = count;
 
+                    for (int idx = 0; idx < number_of_fields; idx++)
+                    {
+                        chart_header item = (chart_header)listbox_display_header.ItemContainerGenerator.Items[idx];
+                        double scaling_factor = Convert.ToDouble(item.chart_scale_factor);
+                        if ((scaling_factor < 0)) scaling_factor = 1.0;
+
+                        arr[idx][count] = Convert.ToDouble(fields[idx]) * scaling_factor;
+                    }
+                }
+            });
+        }
+
+
+        private async Task load_chart()
+        {
+            await Task.Run(() =>
+            {
+                scottplot_chart.Plot.Clear();
+
+                /* add value into chart area and customize the chart properties */
                 for (int idx = 0; idx < number_of_fields; idx++)
                 {
                     chart_header item = (chart_header)listbox_display_header.ItemContainerGenerator.Items[idx];
-                    double scaling_factor = Convert.ToDouble(item.chart_scale_factor);
-                    if ((scaling_factor < 0)) scaling_factor = 1.0;
 
-                    arr[idx][count] = Convert.ToDouble(fields[idx]) * scaling_factor;
+                    if (item.chart_ischecked == true)
+                    {
+                        var signal = scottplot_chart.Plot.AddScatterLines(counter, arr[idx]);
+                        var temp_color = (Color)line_color[idx];
+                        signal.LineColor = System.Drawing.Color.FromArgb(temp_color.A, temp_color.R, temp_color.G, temp_color.B);
+                        signal.Label = item.chart_Title;
+                    }
                 }
-            }
+
+            });
         }
 
-
-        private void load_chart()
+        private async void CheckBox_Changed(object sender, RoutedEventArgs e)
         {
-            scottplot_chart.Plot.Clear();
-
-            /* add value into chart area and customize the chart properties */
-            for (int idx = 0; idx < number_of_fields; idx++)
-            {
-                chart_header item = (chart_header)listbox_display_header.ItemContainerGenerator.Items[idx];
-
-                if (item.chart_ischecked == true)
-                {
-                    var signal = scottplot_chart.Plot.AddScatterLines(counter, arr[idx]);
-                    var temp_color = (Color)line_color[idx];
-                    signal.LineColor = System.Drawing.Color.FromArgb(temp_color.A, temp_color.R, temp_color.G, temp_color.B);
-                    signal.Label = item.chart_Title;
-                }
-
-                //var new_axes = scottplot_chart.Plot;
-            }
-
+            await load_chart();
             scottplot_chart.Refresh();
         }
 
-        private void CheckBox_Changed(object sender, RoutedEventArgs e)
+        private async void textbox_scale_factor_TextChanged(object sender, TextChangedEventArgs e)
         {
-            load_chart();
+           
         }
 
-        private void textbox_scale_factor_TextChanged(object sender, TextChangedEventArgs e)
+        private async void button_refresh_chart_Click(object sender, RoutedEventArgs e)
         {
-            load_values();
-            load_chart();
+            await load_values();
+            await load_chart();
+            scottplot_chart.Refresh();
         }
     }
 }
