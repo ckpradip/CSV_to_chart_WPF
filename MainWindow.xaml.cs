@@ -125,8 +125,10 @@ namespace CSV_to_chart_WPF
                         chart_header item = (chart_header)listbox_display_header.ItemContainerGenerator.Items[idx];
                         double scaling_factor = Convert.ToDouble(item.chart_scale_factor);
                         if ((scaling_factor < 0)) scaling_factor = 1.0;
-
-                        arr[idx][count] = Convert.ToDouble(fields[idx]) * scaling_factor;
+                        if (fields[idx] != "")
+                            arr[idx][count] = Convert.ToDouble(fields[idx]) * scaling_factor;
+                        else
+                            arr[idx][count] = 1;
                     }
                 }
             });
@@ -172,6 +174,11 @@ namespace CSV_to_chart_WPF
             await load_values();
             await load_chart();
             scottplot_chart.Refresh();
+        }
+
+        private void button_select_color_Click(object sender, RoutedEventArgs e)
+        {
+
         }
     }
 }
